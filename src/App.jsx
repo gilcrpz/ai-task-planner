@@ -23,6 +23,7 @@ function App() {
   const [tasks, setTasks] = useState(initialTasks);
   const [newTask, setNewTask] = useState("");
   const [filter, setFilter] = useState("All");
+  const [plan, setPlan] = useState(null);
 
   function addTask(e) {
     e.preventDefault();
@@ -49,6 +50,24 @@ function App() {
         task.id === id ? { ...task, done: !task.done } : task
       )
     );
+  }
+
+  function generatePlan() {
+    const priorityOrder = { High: 0, Medium: 1, Low: 2 };
+    const pendingTasks = tasks
+      .filter((task) => !task.done)
+      .sort((first, second) => priorityOrder[first.priority] - priorityOrder[second.priority]);
+
+    setPlan(pendingTasks.map((task, index) => {
+      const hourOfDay = (9 + index) % 24;
+      const displayHour = hourOfDay % 12 || 12;
+      const period = hourOfDay < 12 ? "AM" : "PM";
+
+      return {
+        ...task,
+        suggestedTime: `${displayHour}:00 ${period}`,
+      };
+    }));
   }
 
   const completed = tasks.filter((task) => task.done).length;
@@ -193,19 +212,32 @@ function App() {
           <div className="right-column">
             <div className="ai-card">
               <div className="ai-icon"><Sparkles size={29} strokeWidth={1.7} aria-hidden="true" /></div>
-              <p className="eyebrow">YOUR SMART ASSISTANT</p>
-              <h2>A little help goes a long way.</h2>
+              <p className="eyebrow">YOUR DAILY PLAN</p>
+              <h2>Make room for what matters.</h2>
               <p>
-                Soon, AI will help you organize priorities and plan a more
-                manageable day.
+                Build a suggested schedule from your pending tasks, starting with
+                your highest priorities.
               </p>
-              <button
-                className="ai-button"
-                onClick={() => alert("Your AI assistant is coming in the next development step!")}
-              >
-                <Sparkles size={16} aria-hidden="true" /> Meet your AI planner
+              <button className="ai-button" onClick={generatePlan}>
+                <Sparkles size={16} aria-hidden="true" /> Build my plan
               </button>
-              <span className="coming-soon">AI INTEGRATION COMING SOON</span>
+              {plan && (
+                <div className="plan-output" aria-live="polite">
+                  <h3>Today's suggested plan</h3>
+                  {plan.length ? (
+                    <ol>
+                      {plan.map((task) => (
+                        <li key={task.id}>
+                          <span>{task.suggestedTime}</span>
+                          <span>{task.title}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <p className="plan-empty">You’re all caught up. Add a task to plan your day.</p>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="progress-card">
